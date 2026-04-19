@@ -23,6 +23,7 @@
  关注微信公众平台微信号："正点原子"，免费获取STM32资料。
  广州市星翼电子科技有限公司  
  作者：正点原子 @ALIENTEK
+  修改时间20260419
 ************************************************/
 volatile unsigned long long FreeRTOSRunTimeTicks;
 
@@ -36,7 +37,7 @@ TaskHandle_t StartTask_Handler;
 void start_task(void *pvParameters);
 
 //任务优先级
-#define TIMERCONTROL_TASK_PRIO	2
+#define TIMERCONTROL_TASK_PRIO	3
 //任务堆栈大小	
 #define TIMERCONTROL_STK_SIZE 	256  
 //任务句柄

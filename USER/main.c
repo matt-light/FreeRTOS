@@ -27,6 +27,14 @@
 volatile unsigned long long FreeRTOSRunTimeTicks;
 
 //任务优先级
+#define BEEP_TASK_PRIO			1
+//任务堆栈大小
+#define BEEP_STK_SIZE			128
+//任务句柄
+TaskHandle_t BeepTask_Handler;
+void beep_task(void *pvParameters);
+
+//任务优先级
 #define START_TASK_PRIO			1
 //任务堆栈大小
 #define START_STK_SIZE 			256
@@ -145,6 +153,15 @@ void start_task(void *pvParameters)
                 (void*          )NULL,
                 (UBaseType_t    )TIMERCONTROL_TASK_PRIO,
                 (TaskHandle_t*  )&TimerControlTask_Handler);
+
+    // 创建蜂鸣器任务(每5秒响一声)
+    xTaskCreate((TaskFunction_t )beep_task,
+                (const char*    )"beep_task",
+                (uint16_t       )BEEP_STK_SIZE,
+                (void*          )NULL,
+                (UBaseType_t    )BEEP_TASK_PRIO,
+                (TaskHandle_t*  )&BeepTask_Handler);
+
     vTaskDelete(StartTask_Handler); //删除初始任务
     taskEXIT_CRITICAL();            //退出临界区
 }
@@ -357,4 +374,16 @@ void DrawOlympicRings(u16 center_x, u16 center_y, u8 radius)
             EraseRing(ring_centers_x[i], ring_centers_y[i], radius);
     }
     visible = !visible;
+}
+
+// 蜂鸣器任务 - 每5秒响一声,声音小(蜂鸣器有源,频率由硬件决定无法修改)
+void beep_task(void *pvParameters)
+{
+    while (1)
+    {
+        BEEP = 1;              // 蜂鸣器响
+        vTaskDelay(100);        // 持续100ms(声音小)
+        BEEP = 0;              // 蜂鸣器停
+        vTaskDelay(5000);       // 间隔5秒
+    }
 }

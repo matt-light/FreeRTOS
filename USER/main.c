@@ -376,25 +376,43 @@ void DrawOlympicRings(u16 center_x, u16 center_y, u8 radius)
     visible = !visible;
 }
 
-// 倒计时任务 - 左面板20秒循环倒计时显示
+// 倒计时任务 - 左面板20秒递减，右面板1-20递增，每秒一次
 void countdown_task(void *pvParameters)
 {
-    u8 countdown = 20;
+    u8 left_count = 20;   // 左面板：从20递减
+    u8 right_count = 1;   // 右面板：从1递增
+
+    // 左面板标签
     POINT_COLOR = GREEN;
-    LCD_ShowString(20, 200, 80, 24, 24, "Count:");
+    LCD_ShowString(20, 200, 80, 24, 24, "Down:");
+    // 右面板标签
+    POINT_COLOR = BLUE;
+    LCD_ShowString(136, 200, 80, 24, 24, "Up:");
+
     POINT_COLOR = RED;
 
     while (1)
     {
-        // 清除上次数字(用白色覆盖)
+        // === 左面板：倒计时 ===
         LCD_Fill(20, 230, 80, 260, WHITE);
-        // 显示当前倒计时数字(大字体居中)
-        LCD_ShowxNum(30, 230, countdown, 2, 24, 0);
+        LCD_ShowxNum(30, 230, left_count, 2, 24, 0);
 
-        vTaskDelay(1000); // 每秒递减
-        if (countdown > 0)
-            countdown--;
+        // === 右面板：递增 ===
+        LCD_Fill(136, 230, 200, 260, WHITE);
+        LCD_ShowxNum(146, 230, right_count, 2, 24, 0);
+
+        vTaskDelay(1000); // 每秒更新一次
+
+        // 左面板递减
+        if (left_count > 0)
+            left_count--;
         else
-            countdown = 20; // 归零后循环
+            left_count = 20;
+
+        // 右面板递增
+        if (right_count < 20)
+            right_count++;
+        else
+            right_count = 1;
     }
 }

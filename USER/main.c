@@ -27,12 +27,12 @@
 volatile unsigned long long FreeRTOSRunTimeTicks;
 
 //任务优先级
-#define BEEP_TASK_PRIO			1
+#define COUNTDOWN_TASK_PRIO		1
 //任务堆栈大小
-#define BEEP_STK_SIZE			128
+#define COUNTDOWN_STK_SIZE		128
 //任务句柄
-TaskHandle_t BeepTask_Handler;
-void beep_task(void *pvParameters);
+TaskHandle_t CountdownTask_Handler;
+void countdown_task(void *pvParameters);
 
 //任务优先级
 #define START_TASK_PRIO			1
@@ -154,13 +154,13 @@ void start_task(void *pvParameters)
                 (UBaseType_t    )TIMERCONTROL_TASK_PRIO,
                 (TaskHandle_t*  )&TimerControlTask_Handler);
 
-    // 创建蜂鸣器任务(每5秒响一声)
-    xTaskCreate((TaskFunction_t )beep_task,
-                (const char*    )"beep_task",
-                (uint16_t       )BEEP_STK_SIZE,
+    // 创建倒计时任务(左面板20秒循环倒计时)
+    xTaskCreate((TaskFunction_t )countdown_task,
+                (const char*    )"countdown_task",
+                (uint16_t       )COUNTDOWN_STK_SIZE,
                 (void*          )NULL,
-                (UBaseType_t    )BEEP_TASK_PRIO,
-                (TaskHandle_t*  )&BeepTask_Handler);
+                (UBaseType_t    )COUNTDOWN_TASK_PRIO,
+                (TaskHandle_t*  )&CountdownTask_Handler);
 
     vTaskDelete(StartTask_Handler); //删除初始任务
     taskEXIT_CRITICAL();            //退出临界区
@@ -376,14 +376,25 @@ void DrawOlympicRings(u16 center_x, u16 center_y, u8 radius)
     visible = !visible;
 }
 
-// 蜂鸣器任务 - 每5秒响一声,声音小(蜂鸣器有源,频率由硬件决定无法修改)
-void beep_task(void *pvParameters)
+// 倒计时任务 - 左面板20秒循环倒计时显示
+void countdown_task(void *pvParameters)
 {
+    u8 countdown = 20;
+    POINT_COLOR = GREEN;
+    LCD_ShowString(20, 200, 80, 24, 24, "Count:");
+    POINT_COLOR = RED;
+
     while (1)
     {
-        BEEP = 1;              // 蜂鸣器响
-        vTaskDelay(100);        // 持续100ms(声音小)
-        BEEP = 0;              // 蜂鸣器停
-        vTaskDelay(5000);       // 间隔5秒
+        // 清除上次数字(用白色覆盖)
+        LCD_Fill(20, 230, 80, 260, WHITE);
+        // 显示当前倒计时数字(大字体居中)
+        LCD_ShowxNum(30, 230, countdown, 2, 24, 0);
+
+        vTaskDelay(1000); // 每秒递减
+        if (countdown > 0)
+            countdown--;
+        else
+            countdown = 20; // 归零后循环
     }
 }
